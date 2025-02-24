@@ -1,22 +1,18 @@
 local Spectre = {}
 
--- Services
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 
--- Create UI
 local gui = Instance.new("ScreenGui")
 gui.Parent = game.CoreGui
 gui.ResetOnSpawn = false
-gui.Enabled = true -- Default state
+gui.Enabled = false
 
--- Blur Effect
 local BlurEffect = Instance.new("BlurEffect")
 BlurEffect.Size = 15
 BlurEffect.Parent = Lighting
-BlurEffect.Enabled = true
+BlurEffect.Enabled = false
 
--- Main UI Frame
 local main = Instance.new("Frame")
 main.Size = UDim2.new(0, 450, 0, 300)
 main.Position = UDim2.new(0.5, -225, 0.5, -150)
@@ -28,8 +24,7 @@ main.Parent = gui
 local UICorner = Instance.new("UICorner", main)
 UICorner.CornerRadius = UDim.new(0, 10)
 
--- UI Visibility Toggle (RightShift Keybind)
-local isOpen = true
+local isOpen = false
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
         isOpen = not isOpen
@@ -38,7 +33,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- Draggable UI (PC & Mobile)
 local dragging, dragInput, startPos, dragStart
 
 local function startDrag(input)
@@ -81,7 +75,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Function to Create Buttons
 function Spectre.CreateButton(name, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, 400, 0, 40)
@@ -103,7 +96,6 @@ function Spectre.CreateButton(name, callback)
     return button
 end
 
--- Function to Create Toggle
 function Spectre.CreateToggle(name, defaultState, callback)
     local toggle = Instance.new("TextButton")
     toggle.Size = UDim2.new(0, 400, 0, 40)
@@ -126,7 +118,6 @@ function Spectre.CreateToggle(name, defaultState, callback)
     return toggle
 end
 
--- Function to Create Dropdown
 function Spectre.CreateDropdown(name, options, callback)
     local dropdown = Instance.new("TextButton")
     dropdown.Size = UDim2.new(0, 400, 0, 40)
