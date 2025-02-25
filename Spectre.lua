@@ -1,170 +1,146 @@
 local Spectre = {}
 
-local UserInputService = game:GetService("UserInputService")
-local Lighting = game:GetService("Lighting")
-
-local gui = Instance.new("ScreenGui")
-gui.Parent = game.CoreGui
-gui.ResetOnSpawn = false
-gui.Enabled = false
-
-local BlurEffect = Instance.new("BlurEffect")
-BlurEffect.Size = 15
-BlurEffect.Parent = Lighting
-BlurEffect.Enabled = false
-
-local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 450, 0, 300)
-main.Position = UDim2.new(0.5, -225, 0.5, -150)
-main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-main.BackgroundTransparency = 0.15
-main.BorderSizePixel = 0
-main.Parent = gui
-
-local UICorner = Instance.new("UICorner", main)
-UICorner.CornerRadius = UDim.new(0, 10)
-
-local isOpen = false
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
-        isOpen = not isOpen
-        gui.Enabled = isOpen
-        BlurEffect.Enabled = isOpen
-    end
-end)
-
-local dragging, dragInput, startPos, dragStart
-
-local function startDrag(input)
-    dragging = true
-    dragStart = input.Position
-    startPos = main.Position
-
-    input.Changed:Connect(function()
-        if input.UserInputState == Enum.UserInputState.End then
-            dragging = false
+function Spectre:CreateWindow(windowTitle)
+    local window = {}
+    local gui = Instance.new("ScreenGui")
+    gui.Parent = game.CoreGui
+    gui.ResetOnSpawn = false
+    gui.Enabled = false
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 500, 0, 400)
+    mainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    mainFrame.Parent = gui
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    titleLabel.Text = windowTitle or "Window"
+    titleLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.Parent = mainFrame
+    local tabContainer = Instance.new("Frame")
+    tabContainer.Size = UDim2.new(1, 0, 0, 30)
+    tabContainer.Position = UDim2.new(0, 0, 0, 30)
+    tabContainer.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    tabContainer.Parent = mainFrame
+    local contentContainer = Instance.new("Frame")
+    contentContainer.Size = UDim2.new(1, 0, 1, -60)
+    contentContainer.Position = UDim2.new(0, 0, 0, 60)
+    contentContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    contentContainer.Parent = mainFrame
+    window.Gui = gui
+    window.MainFrame = mainFrame
+    window.TabContainer = tabContainer
+    window.ContentContainer = contentContainer
+    window.Tabs = {}
+    function window:CreateTab(name)
+        local tab = {}
+        local tabButton = Instance.new("TextButton")
+        tabButton.Size = UDim2.new(0, 100, 1, 0)
+        tabButton.Text = name or "Tab"
+        tabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tabButton.Parent = tabContainer
+        local tabContent = Instance.new("Frame")
+        tabContent.Size = UDim2.new(1, 0, 1, 0)
+        tabContent.BackgroundTransparency = 1
+        tabContent.Visible = false
+        tabContent.Parent = contentContainer
+        tab.Elements = {}
+        function tab:CreateButton(text, callback)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, -20, 0, 40)
+            btn.Position = UDim2.new(0, 10, 0, #self.Elements * 45)
+            btn.Text = text or "Button"
+            btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.Parent = tabContent
+            btn.MouseButton1Click:Connect(function() callback() end)
+            table.insert(self.Elements, btn)
+            return btn
         end
-    end)
-end
-
-local function updateDrag(input)
-    if dragging then
-        local delta = input.Position - dragStart
-        main.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
-        )
-    end
-end
-
-main.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        startDrag(input)
-    end
-end)
-
-main.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput then
-        updateDrag(input)
-    end
-end)
-
-function Spectre.CreateButton(name, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 400, 0, 40)
-    button.Position = UDim2.new(0.5, -200, 0, #main:GetChildren() * 45)
-    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 16
-    button.Text = name
-    button.Parent = main
-
-    button.MouseButton1Click:Connect(function()
-        button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        task.wait(0.1)
-        button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        callback()
-    end)
-
-    return button
-end
-
-function Spectre.CreateToggle(name, defaultState, callback)
-    local toggle = Instance.new("TextButton")
-    toggle.Size = UDim2.new(0, 400, 0, 40)
-    toggle.Position = UDim2.new(0.5, -200, 0, #main:GetChildren() * 45)
-    toggle.BackgroundColor3 = defaultState and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
-    toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggle.Font = Enum.Font.GothamBold
-    toggle.TextSize = 16
-    toggle.Text = name .. " [" .. (defaultState and "ON" or "OFF") .. "]"
-    toggle.Parent = main
-
-    local state = defaultState
-    toggle.MouseButton1Click:Connect(function()
-        state = not state
-        toggle.BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
-        toggle.Text = name .. " [" .. (state and "ON" or "OFF") .. "]"
-        callback(state)
-    end)
-
-    return toggle
-end
-
-function Spectre.CreateDropdown(name, options, callback)
-    local dropdown = Instance.new("TextButton")
-    dropdown.Size = UDim2.new(0, 400, 0, 40)
-    dropdown.Position = UDim2.new(0.5, -200, 0, #main:GetChildren() * 45)
-    dropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
-    dropdown.Font = Enum.Font.GothamBold
-    dropdown.TextSize = 16
-    dropdown.Text = name
-    dropdown.Parent = main
-
-    local isOpen = false
-    local optionsFrame = Instance.new("Frame")
-    optionsFrame.Size = UDim2.new(0, 400, 0, 0)
-    optionsFrame.Position = UDim2.new(0.5, -200, 0, dropdown.Position.Y.Offset + 45)
-    optionsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    optionsFrame.Parent = main
-    optionsFrame.Visible = false
-
-    local UICorner = Instance.new("UICorner", optionsFrame)
-    UICorner.CornerRadius = UDim.new(0, 8)
-
-    dropdown.MouseButton1Click:Connect(function()
-        isOpen = not isOpen
-        optionsFrame.Visible = isOpen
-        optionsFrame.Size = isOpen and UDim2.new(0, 400, 0, #options * 40) or UDim2.new(0, 400, 0, 0)
-    end)
-
-    for _, option in pairs(options) do
-        local optionButton = Instance.new("TextButton")
-        optionButton.Size = UDim2.new(0, 400, 0, 40)
-        optionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        optionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        optionButton.Font = Enum.Font.GothamBold
-        optionButton.TextSize = 16
-        optionButton.Text = option
-        optionButton.Parent = optionsFrame
-
-        optionButton.MouseButton1Click:Connect(function()
-            dropdown.Text = name .. ": " .. option
-            callback(option)
-            isOpen = false
-            optionsFrame.Visible = false
+        function tab:CreateToggle(text, default, callback)
+            local tog = Instance.new("TextButton")
+            tog.Size = UDim2.new(1, -20, 0, 40)
+            tog.Position = UDim2.new(0, 10, 0, #self.Elements * 45)
+            local state = default or false
+            tog.Text = text .. " [" .. (state and "ON" or "OFF") .. "]"
+            tog.BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+            tog.TextColor3 = Color3.fromRGB(255, 255, 255)
+            tog.Parent = tabContent
+            tog.MouseButton1Click:Connect(function()
+                state = not state
+                tog.Text = text .. " [" .. (state and "ON" or "OFF") .. "]"
+                tog.BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+                callback(state)
+            end)
+            table.insert(self.Elements, tog)
+            return tog
+        end
+        function tab:CreateDropdown(text, options, callback)
+            local drop = Instance.new("TextButton")
+            drop.Size = UDim2.new(1, -20, 0, 40)
+            drop.Position = UDim2.new(0, 10, 0, #self.Elements * 45)
+            drop.Text = text .. " : " .. (options[1] or "None")
+            drop.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            drop.TextColor3 = Color3.fromRGB(255, 255, 255)
+            drop.Parent = tabContent
+            local open = false
+            local dropdownFrame = Instance.new("Frame")
+            dropdownFrame.Size = UDim2.new(1, -20, 0, 0)
+            dropdownFrame.Position = UDim2.new(0, 10, 0, drop.Position.Y.Offset + 40)
+            dropdownFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            dropdownFrame.Visible = false
+            dropdownFrame.Parent = tabContent
+            drop.MouseButton1Click:Connect(function()
+                open = not open
+                dropdownFrame.Visible = open
+                if open then
+                    dropdownFrame.Size = UDim2.new(1, -20, 0, #options * 40)
+                else
+                    dropdownFrame.Size = UDim2.new(1, -20, 0, 0)
+                end
+            end)
+            for i, option in ipairs(options) do
+                local opt = Instance.new("TextButton")
+                opt.Size = UDim2.new(1, 0, 0, 40)
+                opt.Position = UDim2.new(0, 0, 0, (i - 1) * 40)
+                opt.Text = option
+                opt.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+                opt.TextColor3 = Color3.fromRGB(255, 255, 255)
+                opt.Parent = dropdownFrame
+                opt.MouseButton1Click:Connect(function()
+                    drop.Text = text .. " : " .. option
+                    callback(option)
+                    open = false
+                    dropdownFrame.Visible = false
+                    dropdownFrame.Size = UDim2.new(1, -20, 0, 0)
+                end)
+            end
+            table.insert(self.Elements, drop)
+            return drop
+        end
+        function tab:CreateLabel(text)
+            local lab = Instance.new("TextLabel")
+            lab.Size = UDim2.new(1, -20, 0, 30)
+            lab.Position = UDim2.new(0, 10, 0, #self.Elements * 35)
+            lab.Text = text or "Label"
+            lab.BackgroundTransparency = 1
+            lab.TextColor3 = Color3.fromRGB(255, 255, 255)
+            lab.Parent = tabContent
+            table.insert(self.Elements, lab)
+            return lab
+        end
+        tabButton.MouseButton1Click:Connect(function()
+            for _, otherTab in pairs(window.Tabs) do
+                if otherTab.Content then otherTab.Content.Visible = false end
+            end
+            tabContent.Visible = true
         end)
+        tab.Content = tabContent
+        table.insert(window.Tabs, tab)
+        return tab
     end
-
-    return dropdown
+    return window
 end
 
 return Spectre
